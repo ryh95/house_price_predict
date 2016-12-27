@@ -1,3 +1,4 @@
+# coding:utf8
 import pandas as pd
 import numpy as np
 # because data has 'id' column so remove index, when read in
@@ -83,18 +84,40 @@ if __name__ == '__main__':
 
     # random forest
     # from sklearn.ensemble import RandomForestRegressor
-    # max_features = np.linspace(.1,1,11)
+    #
+    # # first tune max_features
+    # # best is 0.37
+    # # max_features = np.linspace(.1,1,11)
+    #
+    # # second tune max_depths and n_estimators
+    # # 先粗调再细调
+    # #  best is 14
+    # max_depths = [13,14,15,16,17]
+    # # max_depths = map(lambda x:int(x),max_depths)
+    #
+    # # best is 700
+    # n_estimators = np.linspace(700,1000,5)
+    # n_estimators = map(lambda x:int(x),n_estimators)
+    #
     # para = {
-    #     'max_features':max_features
+    #     'max_depth':max_depths,
+    #     'n_estimators':n_estimators
     # }
-    # rf = RandomForestRegressor(n_estimators=200,random_state=2)
+    # rf = RandomForestRegressor(random_state=2,max_features=0.37,n_estimators=700,max_depth=14)
+    #
+    # if type == 'evaluate':
+    #     # 0.1370
+    #     test_score = np.sqrt(-cross_val_score(rf, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
+    #     print np.mean(test_score)
+    #
     # grid = GridSearchCV(estimator=rf,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
     # grid.fit(X_train, y_train)
     # print grid.best_params_
     # print np.sqrt(-grid.best_score_)
-    #
+
+    # if tune one parameter once then can plot it
     # import matplotlib.pyplot as plt
-    # plt.plot(max_features, np.sqrt(-grid.cv_results_['mean_test_score']))
+    # plt.plot(min_samples_leaf, np.sqrt(-grid.cv_results_['mean_test_score']))
     # plt.show()
 
     # bagging
@@ -126,21 +149,35 @@ if __name__ == '__main__':
     # plt.show()
 
     # adaboost
-    # from sklearn.ensemble import AdaBoostRegressor
-    # n_estimators = np.linspace(10,400,20)
-    # n_estimators = map(lambda x: int(x), n_estimators)
-    # para = {
-    #     'n_estimators':n_estimators
-    # }
-    # ada = AdaBoostRegressor(base_estimator=Ridge(alpha=15.264,random_state=2),random_state=2)
-    # grid = GridSearchCV(estimator=ada,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
-    # grid.fit(X_train, y_train)
-    # print grid.best_params_
-    # print np.sqrt(-grid.best_score_)
-    #
-    # import matplotlib.pyplot as plt
-    # plt.plot(n_estimators, np.sqrt(-grid.cv_results_['mean_test_score']))
-    # plt.show()
+    from sklearn.ensemble import AdaBoostRegressor
+
+    # best n_estimators is 10 learning_rate is 1.0e-05
+    n_estimators = np.linspace(10, 400, 5)
+    n_estimators = map(lambda x: int(x), n_estimators)
+    learning_rate = np.logspace(-5, -2, 10)
+
+    para = {
+        # 'n_estimators':n_estimators,
+        'learning_rate': learning_rate,
+        'n_estimators': n_estimators
+    }
+
+    ada = AdaBoostRegressor(base_estimator=Lasso(alpha=0.000579, random_state=2), random_state=2, learning_rate=1.0e-05,
+                            n_estimators=10)
+    type = 'evaluate'
+    if type == 'evaluate':
+        # 0.1346
+        test_score = np.sqrt(-cross_val_score(ada, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
+        print np.mean(test_score)
+    else:
+        grid = GridSearchCV(estimator=ada, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
+        grid.fit(X_train, y_train)
+        print grid.best_params_
+        print np.sqrt(-grid.best_score_)
+
+        # import matplotlib.pyplot as plt
+        # plt.plot(learning_rate, np.sqrt(-grid.cv_results_['mean_test_score']))
+        # plt.show()
 
     # xgboost
     from xgboost import XGBRegressor
