@@ -1,9 +1,10 @@
+# coding:utf8
 import pandas as pd
 import numpy as np
 # because data has 'id' column so remove index, when read in
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
-import seaborn as sea
+# import seaborn as sea
 
 train = pd.read_csv('./input/train.csv',index_col=0)
 test = pd.read_csv('./input/test.csv',index_col=0)
@@ -58,48 +59,71 @@ if __name__ == '__main__':
     print np.mean(test_score)
 
     # lasso
-    from sklearn.linear_model import Lasso
-    # best alpha is 0.000579 for lasso
-    alphas = np.logspace(-4, -3, 60)
-    para = {
-        'alpha':alphas
-    }
-    lasso = Lasso(random_state=2,max_iter=2000)
-    grid = GridSearchCV(estimator=lasso,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
-    grid.fit(X_train,y_train)
-    # print grid.cv_results_
-    print grid.best_params_
-    print np.sqrt(-grid.best_score_)
-
-    import matplotlib.pyplot as plt
-    plt.plot(alphas,np.sqrt(-grid.cv_results_['mean_test_score']))
-    plt.show()
-
-    # random forest
-    # from sklearn.ensemble import RandomForestRegressor
-    # max_features = np.linspace(.1,1,11)
+    # from sklearn.linear_model import Lasso
+    # # best alpha is 0.000579 for lasso
+    # alphas = np.logspace(-4, -3, 60)
     # para = {
-    #     'max_features':max_features
+    #     'alpha':alphas
     # }
-    # rf = RandomForestRegressor(n_estimators=200,random_state=2)
-    # grid = GridSearchCV(estimator=rf,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
-    # grid.fit(X_train, y_train)
+    # lasso = Lasso(random_state=2,max_iter=2000)
+    # grid = GridSearchCV(estimator=lasso,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
+    # grid.fit(X_train,y_train)
+    # # print grid.cv_results_
     # print grid.best_params_
     # print np.sqrt(-grid.best_score_)
     #
     # import matplotlib.pyplot as plt
-    # plt.plot(max_features, np.sqrt(-grid.cv_results_['mean_test_score']))
+    # plt.plot(alphas,np.sqrt(-grid.cv_results_['mean_test_score']))
     # plt.show()
 
+    # random forest
+    # from sklearn.ensemble import RandomForestRegressor
+    #
+    # # first tune max_features
+    # # best is 0.37
+    # # max_features = np.linspace(.1,1,11)
+    #
+    # # second tune max_depths and n_estimators
+    # # 先粗调再细调
+    # #  best is 14
+    # max_depths = [13,14,15,16,17]
+    # # max_depths = map(lambda x:int(x),max_depths)
+    #
+    # # best is 700
+    # n_estimators = np.linspace(700,1000,5)
+    # n_estimators = map(lambda x:int(x),n_estimators)
+    #
+    # para = {
+    #     'max_depth':max_depths,
+    #     'n_estimators':n_estimators
+    # }
+    # rf = RandomForestRegressor(random_state=2,max_features=0.37,n_estimators=700,max_depth=14)
+    #
+    # if type == 'evaluate':
+    #     # 0.1370
+    #     test_score = np.sqrt(-cross_val_score(rf, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
+    #     print np.mean(test_score)
+    #
+    # grid = GridSearchCV(estimator=rf,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
+    # grid.fit(X_train, y_train)
+    # print grid.best_params_
+    # print np.sqrt(-grid.best_score_)
+
+    # if tune one parameter once then can plot it
+    # import matplotlib.pyplot as plt
+    # plt.plot(min_samples_leaf, np.sqrt(-grid.cv_results_['mean_test_score']))
+    # plt.show()
+
+
     # bagging
-    from sklearn.ensemble import BaggingRegressor
-    # best n_estimator is 579
+    # from sklearn.ensemble import BaggingRegressor
+    # # best n_estimator is 579
     # n_estimators = np.linspace(1,1000,20)
     # n_estimators = map(lambda x:int(x),n_estimators)
     # para = {
     #     'n_estimators':n_estimators
     # }
-    # bg = BaggingRegressor(base_estimator=Ridge(alpha=15.264,random_state=2),random_state=2,n_jobs=-1)
+    # bg = BaggingRegressor(base_estimator=Lasso(alpha=0.000579,random_state=2),random_state=2,n_jobs=-1)
     # grid = GridSearchCV(estimator=bg, param_grid=para, scoring='neg_mean_squared_error', n_jobs=1, cv=5)
     # grid.fit(X_train, y_train)
     # print grid.best_params_
