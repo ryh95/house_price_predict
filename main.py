@@ -59,21 +59,27 @@ if __name__ == '__main__':
 
     # lasso
     from sklearn.linear_model import Lasso
-    # best alpha is 0.000579 for lasso
-    alphas = np.logspace(-4, -3, 60)
-    para = {
-        'alpha':alphas
-    }
-    lasso = Lasso(random_state=2,max_iter=2000)
-    grid = GridSearchCV(estimator=lasso,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
-    grid.fit(X_train,y_train)
-    # print grid.cv_results_
-    print grid.best_params_
-    print np.sqrt(-grid.best_score_)
-
-    import matplotlib.pyplot as plt
-    plt.plot(alphas,np.sqrt(-grid.cv_results_['mean_test_score']))
-    plt.show()
+    # # best alpha is 0.000579 for lasso
+    # alphas = np.logspace(-4, -3, 60)
+    # para = {
+    #     'alpha':alphas
+    # }
+    # lasso = Lasso(alpha=0.000579,random_state=2,max_iter=2000)
+    #
+    # if type == 'evaluate':
+    #     # 0.1351
+    #     test_score = np.sqrt(-cross_val_score(lasso, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
+    #     print np.mean(test_score)
+    # else:
+    #     grid = GridSearchCV(estimator=lasso,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
+    #     grid.fit(X_train,y_train)
+    #     # print grid.cv_results_
+    #     print grid.best_params_
+    #     print np.sqrt(-grid.best_score_)
+    #
+    # import matplotlib.pyplot as plt
+    # plt.plot(alphas,np.sqrt(-grid.cv_results_['mean_test_score']))
+    # plt.show()
 
     # random forest
     # from sklearn.ensemble import RandomForestRegressor
@@ -92,21 +98,31 @@ if __name__ == '__main__':
     # plt.show()
 
     # bagging
-    from sklearn.ensemble import BaggingRegressor
-    # best n_estimator is 579
-    # n_estimators = np.linspace(1,1000,20)
-    # n_estimators = map(lambda x:int(x),n_estimators)
-    # para = {
-    #     'n_estimators':n_estimators
-    # }
-    # bg = BaggingRegressor(base_estimator=Ridge(alpha=15.264,random_state=2),random_state=2,n_jobs=-1)
-    # grid = GridSearchCV(estimator=bg, param_grid=para, scoring='neg_mean_squared_error', n_jobs=1, cv=5)
-    # grid.fit(X_train, y_train)
-    # print grid.best_params_
-    # print np.sqrt(-grid.best_score_)
+    # from sklearn.ensemble import BaggingRegressor
+    # # best n_estimator is 369
+    # # n_estimators = np.linspace(1,1000,20)
+    # # n_estimators = map(lambda x:int(x),n_estimators)
     #
+    # # best is 0.8
+    # max_features = np.linspace(0.1,1,10)
+    # para = {
+    #     # 'n_estimators':n_estimators
+    #     'max_features':max_features
+    # }
+    # bg = BaggingRegressor(base_estimator=Lasso(alpha=0.000579,random_state=2),random_state=2,n_jobs=-1,n_estimators=369,max_features=0.8)
+    #
+    # if type == 'evaluate':
+    #     # 0.1349
+    #     test_score = np.sqrt(-cross_val_score(bg, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
+    #     print np.mean(test_score)
+    # else:
+    #     grid = GridSearchCV(estimator=bg, param_grid=para, scoring='neg_mean_squared_error', n_jobs=1, cv=5)
+    #     grid.fit(X_train, y_train)
+    #     print grid.best_params_
+    #     print np.sqrt(-grid.best_score_)
+
     # import matplotlib.pyplot as plt
-    # plt.plot(n_estimators, np.sqrt(-grid.cv_results_['mean_test_score']))
+    # plt.plot(max_features, np.sqrt(-grid.cv_results_['mean_test_score']))
     # plt.show()
 
     # adaboost
@@ -127,19 +143,65 @@ if __name__ == '__main__':
     # plt.show()
 
     # xgboost
-    # from xgboost import XGBRegressor
-    # # best of max_depth is 5
-    # max_depths = np.linspace(1,10,10)
-    # max_depths = map(lambda x: int(x), max_depths)
-    # para = {
-    #     'max_depth':max_depths
-    # }
-    # xgb =  XGBRegressor()
-    # grid = GridSearchCV(estimator=xgb, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
-    # grid.fit(X_train, y_train)
-    # print grid.best_params_
-    # print np.sqrt(-grid.best_score_)
-    #
+    from xgboost import XGBRegressor
+    # best of max_depth is 2 and learning rate is 0.2154
+    max_depths = np.linspace(1,10,10)
+    max_depths = map(lambda x: int(x), max_depths)
+    learning_rate = np.logspace(-3,0,10)
+
+    # best n_estimators is 257 and gamma is 0
+    n_estimators = np.linspace(10,1000,5)
+    n_estimators = map(lambda x: int(x), n_estimators)
+    gamma = [i / 10.0 for i in range(0, 5)]
+
+    # best min_child_weight is 3
+    min_child_weight = np.linspace(1,10,9)
+    min_child_weight = map(lambda x: int(x), min_child_weight)
+
+    # best max_delta_step is 0
+    max_delta_step = np.linspace(0,10,9)
+    max_delta_step = map(lambda x: int(x),max_delta_step)
+
+    # best subsample is 1.0
+    subsample = np.linspace(0.1,1,10)
+
+    # best colsample_bytree is 0.5 colsample_bylevel is 0.6
+    colsample_bytree = np.linspace(0.1,1,10)
+    colsample_bylevel = np.linspace(0.1,1,10)
+
+    # best reg_alpha is 0.1 reg_lambda is 0.3594
+    reg_alpha = [0,1e-5, 1e-2, 0.1, 1, 100]
+    reg_lambda = np.logspace(-2,0,10)
+
+    # best scale_pos_weight is 1.0
+    scale_pos_weight = np.linspace(0.1,1,10)
+
+    para = {
+        # 'max_depth':max_depths,
+        # 'learning_rate':learning_rate
+        # 'n_estimators':n_estimators,
+        # 'gamma':gamma
+        # 'min_child_weight':min_child_weight,
+        # 'max_delta_step':max_delta_step
+        # 'subsample':subsample
+        # 'colsample_bytree':colsample_bytree,
+        # 'colsample_bylevel':colsample_bylevel
+        # 'reg_alpha':reg_alpha,
+        # 'reg_lambda':reg_lambda
+        'scale_pos_weight':scale_pos_weight
+    }
+    xgb =  XGBRegressor(max_depth=2,learning_rate=0.2154,n_estimators=257,min_child_weight=3,colsample_bytree=0.5,colsample_bylevel=0.6,reg_alpha=0.1,reg_lambda=0.3594)
+
+    if type == 'evaluate':
+        # 0.1228
+        test_score = np.sqrt(-cross_val_score(xgb, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
+        print np.mean(test_score)
+    else:
+        grid = GridSearchCV(estimator=xgb, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
+        grid.fit(X_train, y_train)
+        print grid.best_params_
+        print np.sqrt(-grid.best_score_)
+
     # import matplotlib.pyplot as plt
-    # plt.plot(max_depths, np.sqrt(-grid.cv_results_['mean_test_score']))
+    # plt.plot(scale_pos_weight, np.sqrt(-grid.cv_results_['mean_test_score']))
     # plt.show()
