@@ -59,7 +59,7 @@ if __name__ == '__main__':
     print np.mean(test_score)
 
     # lasso
-    # from sklearn.linear_model import Lasso
+    from sklearn.linear_model import Lasso
     # # best alpha is 0.000579 for lasso
     # alphas = np.logspace(-4, -3, 60)
     # para = {
@@ -134,20 +134,33 @@ if __name__ == '__main__':
     # plt.show()
 
     # adaboost
-    # from sklearn.ensemble import AdaBoostRegressor
-    # n_estimators = np.linspace(10,400,20)
-    # n_estimators = map(lambda x: int(x), n_estimators)
-    # para = {
-    #     'n_estimators':n_estimators
-    # }
-    # ada = AdaBoostRegressor(base_estimator=Ridge(alpha=15.264,random_state=2),random_state=2)
-    # grid = GridSearchCV(estimator=ada,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
-    # grid.fit(X_train, y_train)
-    # print grid.best_params_
-    # print np.sqrt(-grid.best_score_)
-    #
+    from sklearn.ensemble import AdaBoostRegressor
+
+    # best n_estimators is 10 learning_rate is 1.0e-05
+    n_estimators = np.linspace(10,400,5)
+    n_estimators = map(lambda x: int(x), n_estimators)
+    learning_rate = np.logspace(-5,-2,10)
+
+    para = {
+        # 'n_estimators':n_estimators,
+        'learning_rate':learning_rate,
+        'n_estimators':n_estimators
+    }
+
+    ada = AdaBoostRegressor(base_estimator=Lasso(alpha=0.000579,random_state=2),random_state=2,learning_rate=1.0e-05,n_estimators=10)
+    type = 'evaluate'
+    if type == 'evaluate':
+        # 0.1346
+        test_score = np.sqrt(-cross_val_score(ada, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
+        print np.mean(test_score)
+    else:
+        grid = GridSearchCV(estimator=ada,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
+        grid.fit(X_train, y_train)
+        print grid.best_params_
+        print np.sqrt(-grid.best_score_)
+
     # import matplotlib.pyplot as plt
-    # plt.plot(n_estimators, np.sqrt(-grid.cv_results_['mean_test_score']))
+    # plt.plot(learning_rate, np.sqrt(-grid.cv_results_['mean_test_score']))
     # plt.show()
 
     # xgboost
