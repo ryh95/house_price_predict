@@ -57,25 +57,23 @@ if __name__ == '__main__':
     test_score = np.sqrt(-cross_val_score(lr, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
     print np.mean(test_score)
 
-    # ridge
-    from sklearn.linear_model import Ridge
-    # # best alpha is 15.264
-    # alphas = np.logspace(-3, 2, 50)
-    # # tols = np.logspace(-1,2,20)
-    # para = {
-    #     'alpha':alphas
-    #     # 'tol':tols
-    # }
-    # ridge = Ridge(random_state=2)
-    # grid = GridSearchCV(estimator=ridge,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
-    # grid.fit(X_train,y_train)
-    # # print grid.cv_results_
-    # print grid.best_params_
-    # print np.sqrt(-grid.best_score_)
-    #
-    # import matplotlib.pyplot as plt
-    # plt.plot(alphas,np.sqrt(-grid.cv_results_['mean_test_score']))
-    # plt.show()
+    # lasso
+    from sklearn.linear_model import Lasso
+    # best alpha is 0.000579 for lasso
+    alphas = np.logspace(-4, -3, 60)
+    para = {
+        'alpha':alphas
+    }
+    lasso = Lasso(random_state=2,max_iter=2000)
+    grid = GridSearchCV(estimator=lasso,param_grid=para,scoring='neg_mean_squared_error',n_jobs=-1,cv=5)
+    grid.fit(X_train,y_train)
+    # print grid.cv_results_
+    print grid.best_params_
+    print np.sqrt(-grid.best_score_)
+
+    import matplotlib.pyplot as plt
+    plt.plot(alphas,np.sqrt(-grid.cv_results_['mean_test_score']))
+    plt.show()
 
     # random forest
     # from sklearn.ensemble import RandomForestRegressor
@@ -129,19 +127,19 @@ if __name__ == '__main__':
     # plt.show()
 
     # xgboost
-    from xgboost import XGBRegressor
-    # best of max_depth is 5
-    max_depths = np.linspace(1,10,10)
-    max_depths = map(lambda x: int(x), max_depths)
-    para = {
-        'max_depth':max_depths
-    }
-    xgb =  XGBRegressor()
-    grid = GridSearchCV(estimator=xgb, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
-    grid.fit(X_train, y_train)
-    print grid.best_params_
-    print np.sqrt(-grid.best_score_)
-
-    import matplotlib.pyplot as plt
-    plt.plot(max_depths, np.sqrt(-grid.cv_results_['mean_test_score']))
-    plt.show()
+    # from xgboost import XGBRegressor
+    # # best of max_depth is 5
+    # max_depths = np.linspace(1,10,10)
+    # max_depths = map(lambda x: int(x), max_depths)
+    # para = {
+    #     'max_depth':max_depths
+    # }
+    # xgb =  XGBRegressor()
+    # grid = GridSearchCV(estimator=xgb, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
+    # grid.fit(X_train, y_train)
+    # print grid.best_params_
+    # print np.sqrt(-grid.best_score_)
+    #
+    # import matplotlib.pyplot as plt
+    # plt.plot(max_depths, np.sqrt(-grid.cv_results_['mean_test_score']))
+    # plt.show()
