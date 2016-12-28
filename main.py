@@ -1,7 +1,6 @@
 # coding:utf8
 import pandas as pd
 import numpy as np
-# because data has 'id' column so remove index, when read in
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import Lasso
@@ -12,12 +11,11 @@ from xgboost import XGBRegressor
 import seaborn as sea
 
 
-###########################################################
-# modeling
-# here use linear regression as benchmark
-# lasso ,random forest ,and ensemble method(bagging adaboost XGBoost) will be tested
-
 def test_models(type='evaluate'):
+
+    # modeling
+    # here use linear regression as benchmark
+    # lasso ,random forest ,and ensemble method(bagging adaboost XGBoost) will be tested
 
     # lasso
     # # best alpha is 0.000579 for lasso
@@ -238,7 +236,6 @@ def blending(X_train,X_test,y_train,id_test):
             y_train_tmp = y_train[train]
             X_test_tmp = X_train[test]
             y_test_tmp = y_train[test]
-            # Todo:fix index problem
             clf.fit(X_train_tmp, y_train_tmp)
             y_submission = clf.predict(X_test_tmp)
             dataset_blend_train[test, j] = y_submission
