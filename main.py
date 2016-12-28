@@ -47,7 +47,7 @@ def test_models(type='evaluate'):
 
     # random forest
     if type == 'evaluate':
-        # 0.1372
+        # 0.1370
         rf = RandomForestRegressor(random_state=2, max_features=0.37, n_estimators=700, max_depth=14, n_jobs=-1)
         test_score = np.sqrt(-cross_val_score(rf, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
         print np.mean(test_score)
@@ -142,7 +142,7 @@ def test_models(type='evaluate'):
 
     # xgboost
     if type == 'evaluate':
-        # 0.1228
+        # 0.1265
         xgb = XGBRegressor(max_depth=2, learning_rate=0.2154, n_estimators=257, min_child_weight=3,
                            colsample_bytree=0.5, colsample_bylevel=0.6, reg_alpha=0.1, reg_lambda=0.3594)
         test_score = np.sqrt(-cross_val_score(xgb, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
@@ -207,7 +207,7 @@ def test_models(type='evaluate'):
         # plt.plot(scale_pos_weight, np.sqrt(-grid.cv_results_['mean_test_score']))
         # plt.show()
 
-def blending(X_train,X_test,y_train):
+def blending(X_train,X_test,y_train,id_test):
 
     # blending
     from sklearn.model_selection import KFold
@@ -245,28 +245,46 @@ def blending(X_train,X_test,y_train):
             dataset_blend_test_j[:, i] = clf.predict(X_test)
         dataset_blend_test[:, j] = dataset_blend_test_j.mean(1)
 
-    alphas = np.logspace(-4, -3, 60)
+    alphas = np.logspace(-5, -3, 60)
 
     para = {
         'alpha': alphas
     }
 
-    lasso = Lasso(random_state=2, max_iter=2000)
-    grid = GridSearchCV(estimator=lasso, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
-    grid.fit(dataset_blend_train, y_train)
+    lasso = Lasso(random_state=2, max_iter=2000,alpha=0.0001)
+    # grid = GridSearchCV(estimator=lasso, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
+    # grid.fit(dataset_blend_train, y_train)
+
     # print grid.cv_results_
-    print grid.best_params_
-    print np.sqrt(-grid.best_score_)
+    # print grid.best_params_
+    # print np.sqrt(-grid.best_score_)
 
-    import matplotlib.pyplot as plt
-    plt.plot(alphas, np.sqrt(-grid.cv_results_['mean_test_score']))
-    plt.show()
+    # import matplotlib.pyplot as plt
+    # plt.plot(alphas, np.sqrt(-grid.cv_results_['mean_test_score']))
+    # plt.show()
 
+    # result
+    # 0.1249
+    # test_score = np.sqrt(-cross_val_score(lasso, dataset_blend_train, y_train, cv=5, scoring='neg_mean_squared_error'))
+    # print np.mean(test_score)
+
+    lasso.fit(dataset_blend_train,y_train)
+    y_predict = lasso.predict(dataset_blend_test)
+
+    #recover y_predict
+    y_predict = np.expm1(y_predict)
+
+    submission_df = pd.DataFrame(index=id_test)
+    submission_df['SalePrice'] = y_predict
+    submission_df.to_csv('submission.csv')
 
 if __name__ == '__main__':
 
-    train = pd.read_csv('./input/train.csv', index_col=0)
-    test = pd.read_csv('./input/test.csv', index_col=0)
+    train = pd.read_csv('./input/train.csv')
+    test = pd.read_csv('./input/test.csv')
+
+    id_train = train.pop('Id')
+    id_test = test.pop('Id')
 
     # preprocessing
 
@@ -300,8 +318,8 @@ if __name__ == '__main__':
     all_dummy_df.loc[:, numeric_cols] = (all_dummy_df.loc[:, numeric_cols] - numeric_col_means) / numeric_col_std
 
     # seperate data to train test
-    dummy_train_df = all_dummy_df.loc[train.index]
-    dummy_test_df = all_dummy_df.loc[test.index]
+    dummy_train_df = all_dummy_df.iloc[:len(train)]
+    dummy_test_df = all_dummy_df.iloc[len(train):]
     X_train = dummy_train_df.values
     X_test = dummy_test_df.values
 
@@ -311,4 +329,6 @@ if __name__ == '__main__':
     test_score = np.sqrt(-cross_val_score(lr, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
     print np.mean(test_score)
 
-    blending(X_train=X_train,X_test=X_test,y_train=y_train)
+    # test_models()
+
+    blending(X_train=X_train,X_test=X_test,y_train=y_train,id_test=id_test)
