@@ -294,10 +294,6 @@ if __name__ == '__main__':
     # turn some column into category according to data_discription.txt
     all_df['MSSubClass'] = all_df['MSSubClass'].astype(str)
 
-    # encode categorical column using one-hot
-    # encode MSSubClass column first
-    pd.get_dummies(all_df['MSSubClass'], prefix='MSSubClass')
-    # encode others
     # Todo:OverallQual column is also categorical, maybe also need to encoded in future
     all_dummy_df = pd.get_dummies(all_df)
 
