@@ -1,6 +1,7 @@
 # coding:utf8
 import pandas as pd
 import numpy as np
+from scipy.stats import skew
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import cross_val_score
 from sklearn.linear_model import Lasso
@@ -18,14 +19,15 @@ def test_models(type='evaluate'):
     # lasso ,random forest ,and ensemble method(bagging adaboost XGBoost) will be tested
 
     # lasso
-    # # best alpha is 0.000579 for lasso
+    # best alpha is 0.000579 for lasso
 
     if type == 'evaluate':
-        # 0.1351
-        lasso = Lasso(alpha=0.000579, random_state=2, max_iter=2000)
+        # 0.1242
+        lasso = Lasso(alpha=0.00055, random_state=2, max_iter=2000)
         test_score = np.sqrt(-cross_val_score(lasso, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
         print np.mean(test_score)
     else:
+        # alpha: 0.00055
         alphas = np.logspace(-4, -3, 60)
 
         para = {
@@ -45,61 +47,62 @@ def test_models(type='evaluate'):
 
     # random forest
     if type == 'evaluate':
-        # 0.1370
-        rf = RandomForestRegressor(random_state=2, max_features=0.37, n_estimators=700, max_depth=14, n_jobs=-1)
+        # 0.1433
+        rf = RandomForestRegressor(random_state=2, max_features=0.45, n_estimators=600, max_depth=15, n_jobs=-1)
         test_score = np.sqrt(-cross_val_score(rf, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
         print np.mean(test_score)
     else:
         # first tune max_features
-        # best is 0.37
+        # best is 0.45
         # max_features = np.linspace(.1,1,11)
 
         # second tune max_depths and n_estimators
         # 先粗调再细调
-        #  best is 14
-        max_depths = [13, 14, 15, 16, 17]
-        # max_depths = map(lambda x:int(x),max_depths)
+        #  best is 15
+        max_depths = np.linspace(1, 20, 10)
+        max_depths = map(lambda x:int(x),max_depths)
 
-        # best is 700
-        n_estimators = np.linspace(700, 1000, 5)
+        # best is 600
+        n_estimators = np.linspace(100, 1000, 10)
         n_estimators = map(lambda x: int(x), n_estimators)
 
         para = {
-            'max_depth': max_depths,
+            # 'max_features':max_features
+            # 'max_depth': max_depths,
             'n_estimators': n_estimators
         }
 
-        rf = RandomForestRegressor(random_state=2)
+        rf = RandomForestRegressor(random_state=2,max_features=0.45,max_depth=15)
         grid = GridSearchCV(estimator=rf, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
         grid.fit(X_train, y_train)
         print grid.best_params_
         print np.sqrt(-grid.best_score_)
 
         # if tune one parameter once then can plot it
-        # import matplotlib.pyplot as plt
-        # plt.plot(min_samples_leaf, np.sqrt(-grid.cv_results_['mean_test_score']))
-        # plt.show()
+        import matplotlib.pyplot as plt
+        plt.plot(n_estimators, np.sqrt(-grid.cv_results_['mean_test_score']))
+        plt.show()
 
-    # bagging
+    # # bagging
     if type == 'evaluate':
-        # 0.1349
-        bg = BaggingRegressor(base_estimator=Lasso(alpha=0.000579, random_state=2), random_state=2, n_jobs=-1,
-                              n_estimators=369, max_features=0.8)
+        # 0.1235
+        bg = BaggingRegressor(base_estimator=Lasso(alpha=0.00055, random_state=2), random_state=2, n_jobs=-1,
+                              n_estimators=421, max_features=1.0)
         test_score = np.sqrt(-cross_val_score(bg, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
         print np.mean(test_score)
     else:
-        # best n_estimator is 369
-        # n_estimators = np.linspace(1,1000,20)
-        # n_estimators = map(lambda x:int(x),n_estimators)
+        # best n_estimator is 421
+        n_estimators = np.linspace(1,1000,20)
+        n_estimators = map(lambda x:int(x),n_estimators)
 
-        # best is 0.8
+        # best is 1.0
         max_features = np.linspace(0.1, 1, 10)
 
         para = {
             # 'n_estimators':n_estimators
             'max_features': max_features
         }
-        bg = BaggingRegressor(base_estimator=Lasso(alpha=0.000579, random_state=2), random_state=2, n_jobs=-1)
+        bg = BaggingRegressor(base_estimator=Lasso(alpha=0.00055, random_state=2), random_state=2, n_jobs=-1,n_estimators=421,max_features=1)
         grid = GridSearchCV(estimator=bg, param_grid=para, scoring='neg_mean_squared_error', n_jobs=1, cv=5)
         grid.fit(X_train, y_train)
         print grid.best_params_
@@ -111,15 +114,15 @@ def test_models(type='evaluate'):
 
     # adaboost
     if type == 'evaluate':
-        # 0.1346
-        ada = AdaBoostRegressor(base_estimator=Lasso(alpha=0.000579, random_state=2), random_state=2,
-                                learning_rate=1.0e-05,
-                                n_estimators=10)
+        # 0.1234
+        ada = AdaBoostRegressor(base_estimator=Lasso(alpha=0.00055, random_state=2), random_state=2,
+                                learning_rate=2.1544e-05,
+                                n_estimators=344)
         test_score = np.sqrt(-cross_val_score(ada, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
         print np.mean(test_score)
     else:
-        # best n_estimators is 10 learning_rate is 1.0e-05
-        n_estimators = np.linspace(10, 400, 5)
+        # best n_estimators is 344 learning_rate is 2.1544e-05
+        n_estimators = np.linspace(10, 400, 8)
         n_estimators = map(lambda x: int(x), n_estimators)
         learning_rate = np.logspace(-5, -2, 10)
 
@@ -128,7 +131,7 @@ def test_models(type='evaluate'):
             'learning_rate': learning_rate,
             'n_estimators': n_estimators
         }
-        ada = AdaBoostRegressor(base_estimator=Lasso(alpha=0.000579, random_state=2), random_state=2)
+        ada = AdaBoostRegressor(base_estimator=Lasso(alpha=0.00055, random_state=2), random_state=2)
         grid = GridSearchCV(estimator=ada, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
         grid.fit(X_train, y_train)
         print grid.best_params_
@@ -137,26 +140,26 @@ def test_models(type='evaluate'):
         # import matplotlib.pyplot as plt
         # plt.plot(learning_rate, np.sqrt(-grid.cv_results_['mean_test_score']))
         # plt.show()
-
+    #
     # xgboost
     if type == 'evaluate':
-        # 0.1265
-        xgb = XGBRegressor(max_depth=2, learning_rate=0.2154, n_estimators=257, min_child_weight=3,
-                           colsample_bytree=0.5, colsample_bylevel=0.6, reg_alpha=0.1, reg_lambda=0.3594)
+        # 0.12719
+        xgb = XGBRegressor(max_depth=4, learning_rate=0.2154, n_estimators=258, colsample_bylevel=1.0,
+                           colsample_bytree=0.30, reg_alpha=0.1, reg_lambda=0.5995, scale_pos_weight=0.1)
         test_score = np.sqrt(-cross_val_score(xgb, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
         print np.mean(test_score)
     else:
-        # best of max_depth is 2 and learning rate is 0.2154
+        # best of max_depth is 4 and learning rate is 0.2154
         max_depths = np.linspace(1, 10, 10)
         max_depths = map(lambda x: int(x), max_depths)
         learning_rate = np.logspace(-3, 0, 10)
 
-        # best n_estimators is 257 and gamma is 0
+        # best n_estimators is 258 and gamma is 0
         n_estimators = np.linspace(10, 1000, 5)
         n_estimators = map(lambda x: int(x), n_estimators)
         gamma = [i / 10.0 for i in range(0, 5)]
 
-        # best min_child_weight is 3
+        # best min_child_weight is 1
         min_child_weight = np.linspace(1, 10, 9)
         min_child_weight = map(lambda x: int(x), min_child_weight)
 
@@ -171,20 +174,20 @@ def test_models(type='evaluate'):
         colsample_bytree = np.linspace(0.1, 1, 10)
         colsample_bylevel = np.linspace(0.1, 1, 10)
 
-        # best reg_alpha is 0.1 reg_lambda is 0.3594
+        # best reg_alpha is 0.1 reg_lambda is 0.5995
         reg_alpha = [0, 1e-5, 1e-2, 0.1, 1, 100]
         reg_lambda = np.logspace(-2, 0, 10)
 
-        # best scale_pos_weight is 1.0
+        # best scale_pos_weight is 0.1
         scale_pos_weight = np.linspace(0.1, 1, 10)
 
         para = {
             # 'max_depth':max_depths,
             # 'learning_rate':learning_rate
-            # 'n_estimators':n_estimators,
+            # 'n_estimators':n_estimators
             # 'gamma':gamma
             # 'min_child_weight':min_child_weight,
-            # 'max_delta_step':max_delta_step
+            # 'max_delta_step':max_delta_step,
             # 'subsample':subsample
             # 'colsample_bytree':colsample_bytree,
             # 'colsample_bylevel':colsample_bylevel
@@ -193,17 +196,17 @@ def test_models(type='evaluate'):
             'scale_pos_weight': scale_pos_weight
         }
 
-        xgb = XGBRegressor(max_depth=2, learning_rate=0.2154, n_estimators=257, min_child_weight=3,
-                           colsample_bytree=0.5, colsample_bylevel=0.6, reg_alpha=0.1, reg_lambda=0.3594)
+        xgb = XGBRegressor(max_depth=4,learning_rate=0.2154,n_estimators=258,colsample_bylevel=1.0,
+                           colsample_bytree=0.30,reg_alpha=0.1,reg_lambda=0.5995,scale_pos_weight=0.1)
 
         grid = GridSearchCV(estimator=xgb, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
         grid.fit(X_train, y_train)
         print grid.best_params_
         print np.sqrt(-grid.best_score_)
 
-        # import matplotlib.pyplot as plt
-        # plt.plot(scale_pos_weight, np.sqrt(-grid.cv_results_['mean_test_score']))
-        # plt.show()
+        import matplotlib.pyplot as plt
+        plt.plot(scale_pos_weight, np.sqrt(-grid.cv_results_['mean_test_score']))
+        plt.show()
 
 def blending(X_train,X_test,y_train,id_test):
 
@@ -291,10 +294,22 @@ if __name__ == '__main__':
     # combine train and text to preprocessing
     all_df = pd.concat((train, test), axis=0)
 
-    # turn some column into category according to data_discription.txt
-    all_df['MSSubClass'] = all_df['MSSubClass'].astype(str)
+    numeric_index = all_df.dtypes[all_df.dtypes != "object"].index
+    # some object is also numeric because data_discription says
+    # exclude them
+    numeric_index = numeric_index.drop(['MSSubClass', 'OverallQual', 'OverallCond'])
 
-    # Todo:OverallQual column is also categorical, maybe also need to encoded in future
+    skewed_index = train[numeric_index].apply(lambda x: skew(x.dropna()))
+    skewed_index = skewed_index[skewed_index > 0.75]
+    skewed_index = skewed_index.index
+
+    # tune the skewed column using log
+    all_df[skewed_index] = np.log1p(all_df[skewed_index])
+
+    # turn some column into category according to data_discription.txt
+    all_df[['MSSubClass', 'OverallQual', 'OverallCond']] = all_df[
+        ['MSSubClass', 'OverallQual', 'OverallCond']].astype(object)
+
     all_dummy_df = pd.get_dummies(all_df)
 
     # preprocess the numerical column
@@ -322,6 +337,6 @@ if __name__ == '__main__':
     test_score = np.sqrt(-cross_val_score(lr, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
     print np.mean(test_score)
 
-    # test_models()
+    test_models()
 
-    blending(X_train=X_train,X_test=X_test,y_train=y_train,id_test=id_test)
+    # blending(X_train=X_train,X_test=X_test,y_train=y_train,id_test=id_test)
