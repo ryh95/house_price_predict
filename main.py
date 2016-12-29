@@ -215,14 +215,14 @@ def blending(X_train,X_test,y_train,id_test):
     n_splits= 5
 
     skf = KFold(n_splits=n_splits,random_state=2)
-    clfs = [BaggingRegressor(base_estimator=Lasso(alpha=0.000579, random_state=2), random_state=2, n_jobs=-1,
-                             n_estimators=369, max_features=0.8),
-            AdaBoostRegressor(base_estimator=Lasso(alpha=0.000579, random_state=2), random_state=2,
-                              learning_rate=1.0e-05,
-                              n_estimators=10),
-            RandomForestRegressor(random_state=2, max_features=0.37, n_estimators=700, max_depth=14, n_jobs=-1),
-            XGBRegressor(max_depth=2, learning_rate=0.2154, n_estimators=257, min_child_weight=3,
-                         colsample_bytree=0.5, colsample_bylevel=0.6, reg_alpha=0.1, reg_lambda=0.3594)
+    clfs = [BaggingRegressor(base_estimator=Lasso(alpha=0.00055, random_state=2), random_state=2, n_jobs=-1,
+                              n_estimators=421, max_features=1.0),
+            AdaBoostRegressor(base_estimator=Lasso(alpha=0.00055, random_state=2), random_state=2,
+                              learning_rate=2.1544e-05,
+                              n_estimators=344),
+            RandomForestRegressor(random_state=2, max_features=0.45, n_estimators=600, max_depth=15, n_jobs=-1),
+            XGBRegressor(max_depth=4, learning_rate=0.2154, n_estimators=258, colsample_bylevel=1.0,
+                         colsample_bytree=0.30, reg_alpha=0.1, reg_lambda=0.5995, scale_pos_weight=0.1)
             ]
 
     print "Creating train and test sets for blending."
@@ -245,13 +245,14 @@ def blending(X_train,X_test,y_train,id_test):
             dataset_blend_test_j[:, i] = clf.predict(X_test)
         dataset_blend_test[:, j] = dataset_blend_test_j.mean(1)
 
+    # best alpha is 0.0005
     alphas = np.logspace(-5, -3, 60)
 
     para = {
         'alpha': alphas
     }
 
-    lasso = Lasso(random_state=2, max_iter=2000,alpha=0.0001)
+    lasso = Lasso(random_state=2, max_iter=2000,alpha=0.0005)
     # grid = GridSearchCV(estimator=lasso, param_grid=para, scoring='neg_mean_squared_error', n_jobs=-1, cv=5)
     # grid.fit(dataset_blend_train, y_train)
 
@@ -264,14 +265,14 @@ def blending(X_train,X_test,y_train,id_test):
     # plt.show()
 
     # result
-    # 0.1249
-    # test_score = np.sqrt(-cross_val_score(lasso, dataset_blend_train, y_train, cv=5, scoring='neg_mean_squared_error'))
-    # print np.mean(test_score)
+    # 0.1205
+    test_score = np.sqrt(-cross_val_score(lasso, dataset_blend_train, y_train, cv=5, scoring='neg_mean_squared_error'))
+    print np.mean(test_score)
 
     lasso.fit(dataset_blend_train,y_train)
     y_predict = lasso.predict(dataset_blend_test)
 
-    #recover y_predict
+    # recover y_predict
     y_predict = np.expm1(y_predict)
 
     submission_df = pd.DataFrame(index=id_test)
@@ -337,6 +338,6 @@ if __name__ == '__main__':
     test_score = np.sqrt(-cross_val_score(lr, X_train, y_train, cv=5, scoring='neg_mean_squared_error'))
     print np.mean(test_score)
 
-    test_models()
+    # test_models()
 
-    # blending(X_train=X_train,X_test=X_test,y_train=y_train,id_test=id_test)
+    blending(X_train=X_train,X_test=X_test,y_train=y_train,id_test=id_test)
